@@ -99,7 +99,8 @@ ai-dev-workflow/
 │   │   ├── adr.prompt.md
 │   │   ├── code-review.prompt.md
 │   │   ├── postmortem.prompt.md
-│   │   └── onboard-agent.prompt.md
+│   │   ├── onboard-agent.prompt.md
+│   │   └── adopt-existing-project.prompt.md  ← adoção em projeto que já tem código
 │   └── chatmodes/
 │       └── architect.chatmode.md      ← modo "arquiteto" (read-only + ADR)
 │
@@ -134,7 +135,8 @@ ai-dev-workflow/
 │   └── faq.md
 │
 └── scripts/
-    └── bootstrap.sh                   ← copia o esqueleto para um projeto novo
+    ├── bootstrap.sh                   ← projeto novo (zera estrutura)
+    └── adopt.sh                       ← projeto existente (preserva tudo, infere stack)
 ```
 
 ---
@@ -186,10 +188,57 @@ ln -s .ai-workflow/templates/docs docs
 
 ## Como usar em um projeto existente
 
-1. Copie só `.github/instructions/workflow.instructions.md` + `templates/docs/progress/PROGRESS.md` para começar.
-2. Preencha o `PROGRESS.md` com o **estado atual** do projeto (peça pro agente fazer um inventário).
-3. Adicione ADRs **retroativas** das decisões já tomadas (não precisa ser perfeito — registre o "porquê" do que existe hoje).
-4. Adote o resto incrementalmente, uma instrução por vez.
+> O fluxo abaixo **não toca código** existente. Ele só **mapeia o que já existe** e cria o esqueleto mínimo de contexto. Refatorações ficam para próximas sessões, sob o fluxo completo.
+
+### Opção 1 — Script `adopt.sh` (recomendada)
+
+```bash
+cd /caminho/para/seu/projeto-existente
+bash /caminho/para/ai-dev-workflow/scripts/adopt.sh
+```
+
+O script:
+
+1. Faz **inventário** do projeto (manifests, git, docs existentes).
+2. **Detecta a stack automaticamente** (Next.js, Node backend, Python, mobile) a partir de `package.json`/`pyproject.toml`/`app.json`.
+3. Copia `.github/` **sem sobrescrever** nada existente (`cp -n`).
+4. Cria apenas o **esqueleto mínimo** de `docs/` (PROGRESS.md, decisions-log.md, adr/template). Preserva tudo que já existe.
+5. **Não toca** em `README.md`, `.gitignore`, `.env.example` se já existirem.
+
+Flags úteis:
+
+- `--dry-run` — mostra o que faria sem escrever.
+- `--minimal` — instala só `workflow.instructions.md` + `PROGRESS.md` + `AGENTS.md`.
+- `--stack X` — força stack (`nextjs|node-backend|python|mobile|none`).
+- `--yes` — pula confirmações.
+
+Depois do script, **rode o prompt** [`/adopt-existing-project`](.github/prompts/adopt-existing-project.prompt.md) com seu agente. Ele:
+
+- Inventaria o código (read-only).
+- Pede sua validação do que encontrou.
+- Popula `PROGRESS.md` retroativo, `tech-stack.md`, `overview.md`.
+- Cria ADR-0001 retroativa da stack atual.
+- Cataloga riscos visíveis.
+
+### Opção 2 — Manual (se preferir controle total)
+
+```bash
+cp ai-dev-workflow/.github/instructions/workflow.instructions.md \
+   seu-projeto/.github/instructions/
+cp ai-dev-workflow/templates/docs/progress/PROGRESS.md \
+   seu-projeto/docs/progress/
+cp ai-dev-workflow/AGENTS.md seu-projeto/
+```
+
+Depois peça ao agente:
+
+> "Siga o prompt `adopt-existing-project` para popular o contexto a partir do código atual."
+
+### Princípios da adoção
+
+- **Não refatore durante a adoção.** Adoção = ler + documentar.
+- **ADRs retroativas** registram o "porquê" do que existe (não precisa ser perfeito).
+- **Adote incrementalmente**: o fluxo completo passa a valer das próximas features em diante.
 
 ---
 

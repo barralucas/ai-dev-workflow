@@ -47,31 +47,47 @@ git commit -m "chore: bootstrap ai-dev-workflow"
 
 ## Projeto existente
 
-### 1. Comece pelo essencial
+> Diferente do projeto novo: aqui o objetivo é **mapear o que já existe** sem tocar em código. Refactor fica para depois.
 
-Copie só o mínimo:
+### 1. Rode o `adopt.sh`
 
 ```bash
-cp -r ai-dev-workflow/.github/instructions/workflow.instructions.md \
-      seu-projeto/.github/instructions/
-cp ai-dev-workflow/templates/docs/progress/PROGRESS.md \
-   seu-projeto/docs/progress/
-cp ai-dev-workflow/AGENTS.md seu-projeto/
+cd /caminho/para/seu/projeto-existente
+bash /caminho/para/ai-dev-workflow/scripts/adopt.sh
 ```
 
-### 2. Inventarie o estado atual
+O script:
 
-Peça ao agente:
+- Detecta a stack (Next.js, Node backend, Python, mobile) a partir dos manifests.
+- Copia `.github/` sem sobrescrever nada (`cp -n`).
+- Cria só o esqueleto mínimo de `docs/` — preserva qualquer doc já existente.
+- Não toca `README.md`, `.gitignore`, `.env.example` existentes.
 
-> "Leia este projeto e preencha `docs/progress/PROGRESS.md` com o que já foi entregue (✅), o que está em andamento (🚧) e os próximos sugeridos."
+> Use `--dry-run` para ver o que seria feito antes; `--minimal` para uma adoção ainda mais enxuta.
 
-### 3. ADRs retroativas
+### 2. Rode o prompt de adoção com o agente
 
-Adicione 1-3 ADRs explicando **as decisões já tomadas** (stack, padrão de pastas, libs principais). Não precisa ser perfeito — registre o "porquê" do que existe hoje.
+No editor com Copilot/Claude/Codex, peça:
 
-### 4. Adote incrementalmente
+> "Siga o prompt `/adopt-existing-project`."
 
-A cada nova feature, comece a usar o fluxo completo. Não tente "retrofit" tudo.
+Ele vai:
+
+1. **Descobrir** stack, estrutura, padrões de commit (read-only).
+2. **Validar** o que encontrou com você antes de escrever.
+3. **Popular** `PROGRESS.md`, `tech-stack.md`, `overview.md`, ADR-0001 retroativa, `risk-register.md`.
+4. **Resumir** lacunas (sem testes? sem CI? deps com CVE?) como sugestão de próximos.
+
+### 3. Commit
+
+```bash
+git add -A
+git commit -m "chore: adopt ai-dev-workflow"
+```
+
+### 4. A partir daqui
+
+Use o fluxo completo nas **próximas features**. Não tente retrofittar tudo de uma vez.
 
 ---
 
