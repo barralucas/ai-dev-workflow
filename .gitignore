@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Logs
+*.log
+
+# Env (este repo nao tem env, mas como guarda-corpo)
+.env
+.env.local
+.env.*.local
