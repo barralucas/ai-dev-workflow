@@ -21,6 +21,7 @@ Este repositório é uma **biblioteca de instruções, templates e prompts** que
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Como usar em um novo projeto](#como-usar-em-um-novo-projeto)
 - [Como usar em um projeto existente](#como-usar-em-um-projeto-existente)
+- [Como usar no dia a dia](#como-usar-no-dia-a-dia)
 - [O fluxo em 7 fases (resumo)](#o-fluxo-em-7-fases-resumo)
 - [Arquivos que o agente lê automaticamente](#arquivos-que-o-agente-lê-automaticamente)
 - [Customizando por stack](#customizando-por-stack)
@@ -294,6 +295,102 @@ Depois peça ao agente:
 - **Não refatore durante a adoção.** Adoção = ler + documentar.
 - **ADRs retroativas** registram o "porquê" do que existe (não precisa ser perfeito).
 - **Adote incrementalmente**: o fluxo completo passa a valer das próximas features em diante.
+
+---
+
+## Como usar no dia a dia
+
+> Esta seção mostra **exatamente o que você digita** no chat do agente para cada cenário comum. Os prompts vivem em [`.github/prompts/`](.github/prompts/) e funcionam como **slash commands** no Copilot Chat (VS Code) — em outros agentes, basta citar o nome do prompt.
+
+### O ciclo de uma sessão (sempre o mesmo)
+
+```
+1. Abrir o projeto
+2. Pedir ao agente: "continue de onde paramos"  → ele lê PROGRESS.md
+3. Escolher uma tarefa (feature, bug, refactor, ADR…)
+4. Disparar o prompt correspondente (/new-feature, /bug-fix, etc.)
+5. Acompanhar as 7 fases: revisar plano antes de Execute, conferir gates antes de Handoff
+6. Antes de fechar o editor: "atualize o PROGRESS.md e me dê o resumo"
+```
+
+> **Regra de ouro**: comece toda sessão com **"leia o `PROGRESS.md` e me diga onde paramos"** e termine com **"atualize o `PROGRESS.md` antes do handoff"**. Isso sozinho elimina 80% da "perda de memória" do agente.
+
+### Slash commands disponíveis
+
+No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pelo nome.
+
+| Comando                       | Quando usar                                              | O que ele faz                                                                  |
+| ----------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `/onboard-agent`              | Primeira sessão num projeto / agente novo                | Lê `PROGRESS.md` + arquitetura + ADRs e propõe próximo passo coerente          |
+| `/new-feature`                | Implementar uma user story do backlog                    | Roda as 7 fases (Context → Handoff) com gates explícitos                       |
+| `/bug-fix`                    | Corrigir um bug                                          | Reproduz, escreve teste de regressão **primeiro**, corrige, valida             |
+| `/refactor`                   | Mudar estrutura sem mudar comportamento                  | Garante testes verdes antes/depois; sem mistura com feature                    |
+| `/adr`                        | Registrar uma decisão arquitetural                       | Cria `docs/adr/NNNN-titulo.md` com contexto, alternativas, consequências       |
+| `/code-review`                | Revisar PR ou diff (modo adversarial)                    | Procura segurança, testes faltantes, anti-padrões, doc desatualizada           |
+| `/postmortem`                 | Após um incidente em prod                                | Cria `docs/postmortem/YYYY-MM-DD-titulo.md` com causa-raiz e ações             |
+| `/adopt-existing-project`     | Primeira vez adotando o workflow num projeto que já existe | Inventaria código (read-only), valida com você, popula contexto retroativo   |
+
+### Receitas prontas (copie e cole no chat)
+
+#### Começar o dia
+
+> Leia o `docs/progress/PROGRESS.md` e me diga: o que está em andamento, o que está bloqueado, e qual é o próximo passo recomendado.
+
+#### Implementar uma story do backlog
+
+> `/new-feature` — quero implementar a **US-005: Entrar em uma partida** descrita em `docs/user-stories/backlog.md`. Siga as 7 fases. Pare antes de Execute para eu aprovar o plano.
+
+#### Corrigir um bug
+
+> `/bug-fix` — usuários relataram que o link mágico expirado mostra erro 500 em vez de mensagem amigável. Reproduza, escreva o teste de regressão antes do fix, e atualize o `risk-register.md` se for falha sistêmica.
+
+#### Tomar uma decisão arquitetural
+
+> `/adr` — preciso decidir entre **Drizzle** e **Prisma** como ORM. Liste prós/contras considerando nosso `tech-stack.md`, recomende uma escolha e gere o ADR-000X em `docs/adr/`.
+
+#### Revisar um PR antes de aprovar
+
+> `/code-review` — analise o diff atual (`git diff main`) em modo adversarial. Foque em: segurança (OWASP), testes faltantes, validação de fronteira, doc desatualizada.
+
+#### Trocar de tarefa no meio da sessão
+
+> Salve o estado atual em `PROGRESS.md` (subseção "🚧 Em andamento") com o próximo passo concreto, faça commit `wip:` e me prepare para começar a US-007.
+
+#### Encerrar a sessão
+
+> Atualize o `PROGRESS.md`: mova o que terminei para ✅, registre o que ficou em 🚧 e qual é o próximo. Confirme que `lint && typecheck && test && build` passam. Me dê o resumo no formato padrão de Handoff.
+
+### O que **você** faz vs. o que o **agente** faz
+
+| Etapa                         | Você                                          | Agente                                          |
+| ----------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| Definir prioridade da sessão  | ✅ escolhe a story/bug                        | sugere próximos com base no `PROGRESS.md`       |
+| Critérios de aceite           | ✅ valida (DoR)                               | propõe se faltarem; pergunta se ambíguo         |
+| Design / trade-offs           | ✅ aprova alternativa                         | apresenta ≥ 2 alternativas + ADR draft          |
+| Plano (TODO list)             | ✅ aprova antes de Execute                    | gera plano com arquivos previstos               |
+| Código                        | revisa diff                                   | ✅ executa em commits pequenos                  |
+| Quality gates                 | confere status                                | ✅ roda `lint && typecheck && test && build`    |
+| Doc da feature + `PROGRESS.md`| revisa                                        | ✅ atualiza antes de declarar pronto            |
+| Merge / push                  | ✅ aprova e executa                           | sugere mensagem de PR no formato padrão         |
+
+### Sinais de que está dando certo
+
+- ✅ Toda sessão começa com um **resumo coerente** do `PROGRESS.md`.
+- ✅ O agente **pede aprovação do plano** antes de codar features grandes.
+- ✅ Commits são **pequenos** e referenciam stories (`feat(us-005): ...`).
+- ✅ O agente **se recusa** a declarar pronto se algum gate falhou.
+- ✅ Decisões com trade-off **viram ADR** sem você precisar pedir.
+- ✅ Outro dev (ou você daqui a 2 semanas) entende o estado do projeto em **< 10 min**.
+
+### Sinais de que algo está errado (e o que fazer)
+
+| Sintoma                                                    | Causa provável                                    | Correção                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| Agente não menciona `PROGRESS.md`                          | `AGENTS.md` ou `copilot-instructions.md` não lido | Confira se os arquivos estão na raiz e reinicie a sessão              |
+| Agente vai direto ao código sem plano                      | Falta o prompt `/new-feature`                     | Use o slash command em vez de pedir "implementa X"                    |
+| Comandos da stack errados (ex.: `npm` num projeto `pnpm`)  | Stack errada ativa em `instructions/stacks/`      | Mantenha só o `.instructions.md` da sua stack; ajuste `applyTo`       |
+| Agente "esquece" decisões anteriores                       | ADRs não estão sendo lidas                        | Garanta que existem em `docs/adr/` e cite-as no prompt se necessário  |
+| Sessões longas viram bagunça                               | `PROGRESS.md` desatualizado                       | Force update no meio da sessão; trate-o como código de primeira classe|
 
 ---
 
