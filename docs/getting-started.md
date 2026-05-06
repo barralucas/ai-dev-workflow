@@ -2,13 +2,35 @@
 
 Como adotar o **AI Dev Workflow** em um projeto novo ou existente, em 5 minutos.
 
+> **Pré-requisitos por sistema operacional**
+> - **Linux / macOS**: bash já está disponível por padrão. Nenhuma instalação extra necessária.
+> - **Windows**: os scripts são arquivos `.sh` (bash). Você precisa de **WSL** (recomendado) ou **Git Bash**.
+>   - WSL: [instale pelo Microsoft Store](https://aka.ms/wslstore) e use `wsl bash script.sh`
+>   - Git Bash: instale o [Git for Windows](https://gitforwindows.org/) e execute os comandos no terminal Git Bash.
+> - **Comandos `git`**: funcionam igual em todos os sistemas operacionais.
+
 ## Projeto novo
 
 ### 1. Rode o bootstrap
 
+**Linux / macOS**
 ```bash
 cd /caminho/para/seu/projeto-vazio
 bash /caminho/para/ai-dev-workflow/scripts/bootstrap.sh
+```
+
+**Windows — WSL (recomendado)**
+```powershell
+# No PowerShell, navegue até o projeto e rode via WSL:
+cd C:\caminho\para\seu\projeto-vazio
+wsl bash /mnt/c/caminho/para/ai-dev-workflow/scripts/bootstrap.sh
+```
+
+**Windows — Git Bash**
+```bash
+# Abra o Git Bash e execute:
+cd /c/caminho/para/seu/projeto-vazio
+bash /c/caminho/para/ai-dev-workflow/scripts/bootstrap.sh
 ```
 
 O script vai:
@@ -39,6 +61,7 @@ Se ele ler `PROGRESS.md` e propor algo coerente, está funcionando.
 ### 4. Commit inicial
 
 ```bash
+# Funciona igual em Linux, macOS e Windows (PowerShell ou Git Bash):
 git add -A
 git commit -m "chore: bootstrap ai-dev-workflow"
 ```
@@ -51,9 +74,24 @@ git commit -m "chore: bootstrap ai-dev-workflow"
 
 ### 1. Rode o `adopt.sh`
 
+**Linux / macOS**
 ```bash
 cd /caminho/para/seu/projeto-existente
 bash /caminho/para/ai-dev-workflow/scripts/adopt.sh
+```
+
+**Windows — WSL (recomendado)**
+```powershell
+# No PowerShell, navegue até o projeto e rode via WSL:
+cd C:\caminho\para\seu\projeto-existente
+wsl bash /mnt/c/caminho/para/ai-dev-workflow/scripts/adopt.sh
+```
+
+**Windows — Git Bash**
+```bash
+# Abra o Git Bash e execute:
+cd /c/caminho/para/seu/projeto-existente
+bash /c/caminho/para/ai-dev-workflow/scripts/adopt.sh
 ```
 
 O script:
@@ -81,6 +119,7 @@ Ele vai:
 ### 3. Commit
 
 ```bash
+# Funciona igual em Linux, macOS e Windows (PowerShell ou Git Bash):
 git add -A
 git commit -m "chore: adopt ai-dev-workflow"
 ```

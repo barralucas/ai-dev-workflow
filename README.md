@@ -145,9 +145,23 @@ ai-dev-workflow/
 
 ### Opção 1 — Script de bootstrap (recomendada)
 
+**Linux / macOS**
 ```bash
 # A partir do diretório do seu novo projeto vazio:
 bash /caminho/para/ai-dev-workflow/scripts/bootstrap.sh
+```
+
+**Windows — WSL (recomendado)** · [Como instalar o WSL](https://aka.ms/wslstore)
+```powershell
+# No PowerShell, navegue até o projeto e rode via WSL:
+cd C:\caminho\para\seu\projeto-vazio
+wsl bash /mnt/c/caminho/para/ai-dev-workflow/scripts/bootstrap.sh
+```
+
+**Windows — Git Bash** · [Git for Windows](https://gitforwindows.org/)
+```bash
+# Abra o Git Bash e execute:
+bash /c/caminho/para/ai-dev-workflow/scripts/bootstrap.sh
 ```
 
 O script:
@@ -160,10 +174,18 @@ O script:
 
 ### Opção 2 — Cópia manual
 
+**Linux / macOS**
 ```bash
 cp -r ai-dev-workflow/.github SEU_PROJETO/
 cp ai-dev-workflow/AGENTS.md ai-dev-workflow/CLAUDE.md SEU_PROJETO/
 cp -r ai-dev-workflow/templates/docs SEU_PROJETO/
+```
+
+**Windows — PowerShell**
+```powershell
+Copy-Item -Recurse ai-dev-workflow\.github SEU_PROJETO\
+Copy-Item ai-dev-workflow\AGENTS.md, ai-dev-workflow\CLAUDE.md SEU_PROJETO\
+Copy-Item -Recurse ai-dev-workflow\templates\docs SEU_PROJETO\
 ```
 
 Depois:
@@ -176,10 +198,19 @@ Depois:
 
 ### Opção 3 — Submódulo Git (para puxar updates)
 
+**Linux / macOS**
 ```bash
 git submodule add https://github.com/SEU_USUARIO/ai-dev-workflow .ai-workflow
 ln -s .ai-workflow/.github .github
 ln -s .ai-workflow/templates/docs docs
+```
+
+**Windows — PowerShell (execute como Administrador)**
+```powershell
+git submodule add https://github.com/SEU_USUARIO/ai-dev-workflow .ai-workflow
+# Use junctions no lugar de symlinks:
+cmd /c mklink /J .github .ai-workflow\.github
+cmd /c mklink /J docs .ai-workflow\templates\docs
 ```
 
 > Útil para times grandes que querem propagar melhorias de processo automaticamente.
@@ -192,9 +223,23 @@ ln -s .ai-workflow/templates/docs docs
 
 ### Opção 1 — Script `adopt.sh` (recomendada)
 
+**Linux / macOS**
 ```bash
 cd /caminho/para/seu/projeto-existente
 bash /caminho/para/ai-dev-workflow/scripts/adopt.sh
+```
+
+**Windows — WSL (recomendado)** · [Como instalar o WSL](https://aka.ms/wslstore)
+```powershell
+# No PowerShell, navegue até o projeto e rode via WSL:
+cd C:\caminho\para\seu\projeto-existente
+wsl bash /mnt/c/caminho/para/ai-dev-workflow/scripts/adopt.sh
+```
+
+**Windows — Git Bash** · [Git for Windows](https://gitforwindows.org/)
+```bash
+# Abra o Git Bash e execute:
+bash /c/caminho/para/ai-dev-workflow/scripts/adopt.sh
 ```
 
 O script:
@@ -222,12 +267,22 @@ Depois do script, **rode o prompt** [`/adopt-existing-project`](.github/prompts/
 
 ### Opção 2 — Manual (se preferir controle total)
 
+**Linux / macOS**
 ```bash
 cp ai-dev-workflow/.github/instructions/workflow.instructions.md \
    seu-projeto/.github/instructions/
 cp ai-dev-workflow/templates/docs/progress/PROGRESS.md \
    seu-projeto/docs/progress/
 cp ai-dev-workflow/AGENTS.md seu-projeto/
+```
+
+**Windows — PowerShell**
+```powershell
+Copy-Item ai-dev-workflow\.github\instructions\workflow.instructions.md `
+          seu-projeto\.github\instructions\
+Copy-Item ai-dev-workflow\templates\docs\progress\PROGRESS.md `
+          seu-projeto\docs\progress\
+Copy-Item ai-dev-workflow\AGENTS.md seu-projeto\
 ```
 
 Depois peça ao agente:
