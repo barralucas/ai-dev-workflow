@@ -1,5 +1,9 @@
 pub mod adopt;
 pub mod adr;
+pub mod doctor;
 pub mod init;
 pub mod phase;
 pub mod progress;
+pub mod session;
+pub mod status;
+pub mod verify;

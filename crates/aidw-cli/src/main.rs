@@ -77,6 +77,24 @@ enum Commands {
         #[command(subcommand)]
         action: Option<AdrAction>,
     },
+
+    /// Run quality gate pipeline (lint, typecheck, test, build)
+    Verify {
+        /// Run only a specific gate (lint, typecheck, test, build)
+        step: Option<String>,
+    },
+
+    /// Show one-line project status summary
+    Status,
+
+    /// Check project health and configuration
+    Doctor,
+
+    /// Session lifecycle management
+    Session {
+        #[command(subcommand)]
+        action: SessionAction,
+    },
 }
 
 #[derive(Subcommand)]
@@ -137,6 +155,14 @@ enum AdrAction {
     List,
 }
 
+#[derive(Subcommand)]
+enum SessionAction {
+    /// Begin a work session (shows context, progress, git status)
+    Start,
+    /// End a work session (checklist, reminders, uncommitted changes)
+    End,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     let project_dir = cli.dir.unwrap_or_else(|| std::env::current_dir().unwrap());
@@ -162,6 +188,19 @@ fn main() -> Result<()> {
         Some(Commands::Adr { action }) => {
             commands::adr::run(project_dir, action)?;
         }
+        Some(Commands::Verify { step }) => {
+            commands::verify::run(&project_dir, step.as_deref())?;
+        }
+        Some(Commands::Status) => {
+            commands::status::run(&project_dir)?;
+        }
+        Some(Commands::Doctor) => {
+            commands::doctor::run(&project_dir)?;
+        }
+        Some(Commands::Session { action }) => match action {
+            SessionAction::Start => commands::session::start(&project_dir)?,
+            SessionAction::End => commands::session::end(&project_dir)?,
+        },
     }
 
     Ok(())
