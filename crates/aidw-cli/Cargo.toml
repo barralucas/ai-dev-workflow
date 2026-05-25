@@ -1,0 +1,17 @@
+[package]
+name = "aidw-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI binary for ai-dev-workflow"
+
+[[bin]]
+name = "aidw"
+path = "src/main.rs"
+
+[dependencies]
+aidw-core = { path = "../aidw-core" }
+aidw-tui = { path = "../aidw-tui" }
+clap = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
