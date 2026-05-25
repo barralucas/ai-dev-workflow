@@ -15,3 +15,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Rust
+/target/
+Cargo.lock
