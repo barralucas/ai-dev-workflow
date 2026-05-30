@@ -186,3 +186,23 @@ pub fn run(project_dir: &Path) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::commands::init;
+
+    #[test]
+    fn test_doctor_runs_on_initialized_project() {
+        let dir = tempfile::tempdir().unwrap();
+        init::run(
+            dir.path().to_path_buf(),
+            Some("Doctor Harness".to_string()),
+            Some("rust".to_string()),
+            true,
+        )
+        .unwrap();
+
+        run(dir.path()).unwrap();
+    }
+}

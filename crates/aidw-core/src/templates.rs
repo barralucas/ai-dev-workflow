@@ -108,11 +108,54 @@ mod tests {
     }
 
     #[test]
+    fn test_required_sdd_harness_templates_are_embedded() {
+        let required_templates = [
+            "docs/progress/PROGRESS.md",
+            "docs/progress/decisions-log.md",
+            "docs/adr/0000-template.md",
+            "docs/adr/0001-stack-inicial.md",
+            "docs/architecture/overview.md",
+            "docs/architecture/tech-stack.md",
+            "docs/architecture/data-model.md",
+            "docs/features/_template.md",
+            "docs/user-stories/backlog.md",
+            "docs/risks/risk-register.md",
+            "docs/postmortem/_template.md",
+            "docs/spikes/_template.md",
+        ];
+
+        for template in required_templates {
+            assert!(
+                Templates::get_content(template).is_some(),
+                "Required template should be embedded: {template}"
+            );
+        }
+    }
+
+    #[test]
     fn test_get_template_content() {
         let content = Templates::get_content("docs/progress/PROGRESS.md");
         assert!(content.is_some(), "Should be able to read PROGRESS.md template");
         let text = content.unwrap();
-        assert!(text.contains("{{PROJECT_NAME}}") || text.contains("PROGRESS"),
-            "Template should contain expected content");
+        assert!(
+            text.contains("{{PROJECT_NAME}}") || text.contains("PROGRESS"),
+            "Template should contain expected content"
+        );
+    }
+
+    #[test]
+    fn test_write_docs_creates_required_project_context() {
+        let dir = tempfile::tempdir().unwrap();
+        let written = Templates::write_docs(dir.path(), "Harness Project", false).unwrap();
+
+        assert!(!written.is_empty(), "Expected docs templates to be written");
+        assert!(dir.path().join("docs/progress/PROGRESS.md").exists());
+        assert!(dir.path().join("docs/architecture/tech-stack.md").exists());
+        assert!(dir.path().join("docs/adr/0001-stack-inicial.md").exists());
+        assert!(dir.path().join("docs/risks/risk-register.md").exists());
+
+        let progress =
+            std::fs::read_to_string(dir.path().join("docs/progress/PROGRESS.md")).unwrap();
+        assert!(progress.contains("Harness Project"));
     }
 }

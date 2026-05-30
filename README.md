@@ -5,6 +5,8 @@
 Este repositório é uma **biblioteca de instruções, templates e prompts** que você copia (ou submodula) para qualquer novo projeto — frontend, backend, mobile, dados, infraestrutura — e ganha imediatamente:
 
 - Um **fluxo de 7 fases** (Context → Design → Plan → Execute → Verify → Document → Handoff) que o agente segue rigorosamente.
+- Uma camada de **Spec-Driven Development** para mudanças relevantes: `spec.md`, `plan.md`, `tasks.md`, contratos e quickstart versionados em `specs/<id>-<slug>/`.
+- **Harnesses automatizados** para validar CLI, templates, workflow e contratos antes de confiar em automação agentic.
 - Um **painel vivo de progresso** (`PROGRESS.md`) que atravessa sessões, evita "perda de memória" do agente e serve de onboarding em < 10 min.
 - **ADRs**, **feature docs**, **risk register**, **postmortems**, **spikes** e **decisions log** prontos.
 - Padrões de **qualidade, segurança (OWASP), testes, git e documentação** que o agente é obrigado a respeitar.
@@ -23,6 +25,7 @@ Este repositório é uma **biblioteca de instruções, templates e prompts** que
 - [Como usar em um projeto existente](#como-usar-em-um-projeto-existente)
 - [Como usar no dia a dia](#como-usar-no-dia-a-dia)
 - [O fluxo em 7 fases (resumo)](#o-fluxo-em-7-fases-resumo)
+- [Spec-Driven Development e harnesses](#spec-driven-development-e-harnesses)
 - [Arquivos que o agente lê automaticamente](#arquivos-que-o-agente-lê-automaticamente)
 - [Customizando por stack](#customizando-por-stack)
 - [Convenções de pastas em projetos consumidores](#convenções-de-pastas-em-projetos-consumidores)
@@ -63,7 +66,9 @@ Este workflow resolve as três:
 7. **Defesa em profundidade** — segurança não é uma camada, são várias.
 8. **YAGNI > DRY > clever code** — não construa o que não tem story; só extraia abstração após 2-3 usos reais.
 9. **Stack-agnóstico no núcleo, plugável nas pontas** — o fluxo é o mesmo; o que muda são os comandos e padrões da stack.
-10. **Idioma**: código e identificadores em **inglês**; docs e mensagens ao usuário no **idioma do projeto** (default PT-BR — ajuste no template).
+10. **Specs vivas para mudanças relevantes** — intenção, plano, tasks e contratos devem ficar versionados, não apenas no chat.
+11. **Harness antes de confiança** — automações, templates e comandos precisam de testes determinísticos antes de evals agentic.
+12. **Idioma**: código e identificadores em **inglês**; docs e mensagens ao usuário no **idioma do projeto** (default PT-BR — ajuste no template).
 
 ---
 
@@ -134,6 +139,14 @@ ai-dev-workflow/
 │   ├── customizing-for-your-stack.md
 │   ├── glossary.md
 │   └── faq.md
+│
+├── specs/                             ← specs vivas DESTE workflow
+│   └── 001-sdd-and-harness/
+│       ├── spec.md                    ← o que/por que
+│       ├── plan.md                    ← como
+│       ├── tasks.md                   ← trabalho atômico
+│       ├── contracts/                 ← contratos verificáveis
+│       └── quickstart.md              ← validação local
 │
 └── scripts/
     ├── bootstrap.sh                   ← projeto novo (zera estrutura)
@@ -413,6 +426,46 @@ No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pe
 | **Handoff**  | Tudo verde + documentado | Resumo padrão + próximo passo | DoD 100% atendido                       |
 
 Detalhes completos em [`.github/instructions/workflow.instructions.md`](.github/instructions/workflow.instructions.md).
+
+---
+
+## Spec-Driven Development e harnesses
+
+Para mudanças relevantes neste próprio repositório e em projetos consumidores que adotarem essa prática, use `specs/<id>-<slug>/` como fonte de verdade do intento.
+
+Estrutura recomendada:
+
+```
+specs/001-minha-feature/
+├── spec.md          # o que, por que, usuários, requisitos e critérios de aceite
+├── plan.md          # arquitetura, alternativas, trade-offs e arquivos afetados
+├── tasks.md         # tarefas atômicas, ordenadas e verificáveis
+├── contracts/       # CLI/API/schema/output esperado
+└── quickstart.md    # como validar localmente
+```
+
+Use specs quando a mudança:
+
+- Afeta 2+ módulos, templates ou comandos.
+- Introduz ou altera comportamento público de CLI/API/UI.
+- Exige decisão com trade-off, contrato ou migração.
+- Precisa ser retomada por outro agente sem depender do histórico do chat.
+
+Harness engineering neste projeto significa transformar comportamento esperado em testes reprodutíveis antes de depender de revisão manual ou evals com LLM:
+
+- **CLI harness**: comandos como `init`, `adopt`, `doctor` e `verify` rodam contra diretórios temporários.
+- **Template harness**: templates obrigatórios são embutidos e geram a árvore esperada.
+- **Workflow harness**: invariantes como ordem das fases e transições são testados.
+- **Contract harness**: contratos em `specs/*/contracts/` guiam testes e outputs esperados.
+
+Pipeline local recomendado para este repositório:
+
+```bash
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo build --workspace
+```
 
 ---
 

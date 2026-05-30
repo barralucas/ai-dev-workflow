@@ -160,3 +160,49 @@ pub fn run(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aidw_core::Config;
+
+    #[test]
+    fn test_adopt_dry_run_does_not_write_files() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("Cargo.toml"), "[package]\nname = \"fixture\"")
+            .unwrap();
+
+        run(dir.path().to_path_buf(), None, false, true, true).unwrap();
+
+        assert!(!dir.path().join(Config::FILE_NAME).exists());
+        assert!(!dir.path().join("docs/progress/PROGRESS.md").exists());
+    }
+
+    #[test]
+    fn test_adopt_creates_minimal_context_for_existing_project() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("Cargo.toml"), "[package]\nname = \"fixture\"")
+            .unwrap();
+
+        run(dir.path().to_path_buf(), None, true, false, true).unwrap();
+
+        let config = Config::load(dir.path()).unwrap();
+        assert_eq!(config.project.stack, "rust");
+        assert!(dir.path().join("docs/progress/PROGRESS.md").exists());
+        assert!(dir.path().join("docs/progress/decisions-log.md").exists());
+        assert!(dir.path().join("docs/adr/0000-template.md").exists());
+    }
+
+    #[test]
+    fn test_adopt_preserves_existing_progress_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let progress_dir = dir.path().join("docs/progress");
+        std::fs::create_dir_all(&progress_dir).unwrap();
+        std::fs::write(progress_dir.join("PROGRESS.md"), "# Existing Progress\n").unwrap();
+
+        run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
+
+        let progress = std::fs::read_to_string(progress_dir.join("PROGRESS.md")).unwrap();
+        assert_eq!(progress, "# Existing Progress\n");
+    }
+}

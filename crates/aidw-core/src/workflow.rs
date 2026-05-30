@@ -219,6 +219,23 @@ mod tests {
     }
 
     #[test]
+    fn test_phase_contract_has_exactly_seven_ordered_phases() {
+        let phases = Phase::all();
+
+        assert_eq!(phases.len(), 7);
+        assert_eq!(phases.first(), Some(&Phase::Context));
+        assert_eq!(phases.last(), Some(&Phase::Handoff));
+
+        for window in phases.windows(2) {
+            let current = window[0];
+            let next = window[1];
+
+            assert_eq!(current.next(), Some(next));
+            assert_eq!(next.prev(), Some(current));
+        }
+    }
+
+    #[test]
     fn test_phase_bar() {
         let bar = Phase::Execute.render_bar();
         assert!(bar.contains("[EXECUTE]"));

@@ -85,3 +85,31 @@ pub fn run(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aidw_core::Config;
+
+    #[test]
+    fn test_init_creates_config_and_required_docs() {
+        let dir = tempfile::tempdir().unwrap();
+
+        run(
+            dir.path().to_path_buf(),
+            Some("Harness Project".to_string()),
+            Some("rust".to_string()),
+            true,
+        )
+        .unwrap();
+
+        let config = Config::load(dir.path()).unwrap();
+        assert_eq!(config.project.name, "Harness Project");
+        assert_eq!(config.project.stack, "rust");
+        assert_eq!(config.commands.test.as_deref(), Some("cargo test"));
+
+        assert!(dir.path().join("docs/progress/PROGRESS.md").exists());
+        assert!(dir.path().join("docs/architecture/tech-stack.md").exists());
+        assert!(dir.path().join("docs/adr/0001-stack-inicial.md").exists());
+    }
+}
