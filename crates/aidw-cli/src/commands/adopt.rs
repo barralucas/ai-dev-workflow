@@ -60,6 +60,7 @@ pub fn run(
         println!("    - docs/progress/PROGRESS.md (if not exists)");
         println!("    - docs/progress/decisions-log.md (if not exists)");
         println!("    - docs/adr/0000-template.md (if not exists)");
+        println!("    - skills/ (if not exists)");
         if !minimal {
             println!("    - docs/architecture/ (if not exists)");
             println!("    - docs/features/ (if not exists)");
@@ -148,12 +149,18 @@ pub fn run(
         }
     }
 
+    // Write agent-agnostic skills (non-destructive)
+    let written_skills = Templates::write_skills(&project_dir, false)?;
+    for file in &written_skills {
+        println!("  ✓ Created {}", file);
+    }
+
     println!();
     println!("✅ Adoption complete!");
     println!();
     println!("Next steps:");
     println!("  1. Open the project with your AI agent (Copilot, Claude, Codex)");
-    println!("  2. Ask it to populate PROGRESS.md from the existing code");
+    println!("  2. Start with the `atlas` skill and ask it to adopt the existing project");
     println!("  3. Run `aidw` to see the dashboard");
     println!("  4. git add -A && git commit -m \"chore: adopt ai-dev-workflow\"");
     println!();
@@ -191,6 +198,7 @@ mod tests {
         assert!(dir.path().join("docs/progress/PROGRESS.md").exists());
         assert!(dir.path().join("docs/progress/decisions-log.md").exists());
         assert!(dir.path().join("docs/adr/0000-template.md").exists());
+        assert!(dir.path().join("skills/atlas/SKILL.md").exists());
     }
 
     #[test]
@@ -204,5 +212,19 @@ mod tests {
 
         let progress = std::fs::read_to_string(progress_dir.join("PROGRESS.md")).unwrap();
         assert_eq!(progress, "# Existing Progress\n");
+    }
+
+    #[test]
+    fn test_adopt_preserves_existing_skill() {
+        let dir = tempfile::tempdir().unwrap();
+        let atlas_path = dir.path().join("skills/atlas/SKILL.md");
+        std::fs::create_dir_all(atlas_path.parent().unwrap()).unwrap();
+        std::fs::write(&atlas_path, "custom atlas").unwrap();
+
+        run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
+
+        let atlas = std::fs::read_to_string(atlas_path).unwrap();
+        assert_eq!(atlas, "custom atlas");
+        assert!(dir.path().join("skills/workflow/SKILL.md").exists());
     }
 }

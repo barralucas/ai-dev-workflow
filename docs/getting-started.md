@@ -36,6 +36,7 @@ bash /c/caminho/para/ai-dev-workflow/scripts/bootstrap.sh
 O script vai:
 
 - Copiar `.github/`, `AGENTS.md`, `CLAUDE.md`.
+- Copiar `skills/`, incluindo a skill principal `atlas`.
 - Copiar `templates/docs/` para `docs/`.
 - Perguntar a stack (Next.js, Node backend, Python, mobile, custom).
 - Substituir `{{PROJECT_NAME}}` nos templates.
@@ -55,6 +56,10 @@ Edite na ordem:
 Abra o projeto no VS Code e peça ao Copilot:
 
 > "Faça onboarding deste projeto e proponha o próximo passo."
+
+Se seu agente suportar skills, prefira:
+
+> "Use a skill atlas para fazer onboarding deste projeto e propor o próximo passo."
 
 Se ele ler `PROGRESS.md` e propor algo coerente, está funcionando.
 
@@ -98,6 +103,7 @@ O script:
 
 - Detecta a stack (Next.js, Node backend, Python, mobile) a partir dos manifests.
 - Copia `.github/` sem sobrescrever nada (`cp -n`).
+- Copia `skills/` sem sobrescrever skills existentes, incluindo `atlas`.
 - Cria só o esqueleto mínimo de `docs/` — preserva qualquer doc já existente.
 - Não toca `README.md`, `.gitignore`, `.env.example` existentes.
 
@@ -107,7 +113,7 @@ O script:
 
 No editor com Copilot/Claude/Codex, peça:
 
-> "Siga o prompt `/adopt-existing-project`."
+> "Use a skill atlas para adotar este projeto existente."
 
 Ele vai:
 
@@ -134,7 +140,7 @@ Use o fluxo completo nas **próximas features**. Não tente retrofittar tudo de 
 
 Faça este teste — peça ao agente:
 
-> "Crie a feature US-001: <título>". Siga o workflow.
+> "Use a skill atlas para criar a feature US-001: <título>."
 
 Espere ver:
 

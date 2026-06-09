@@ -7,6 +7,7 @@ Este repositório é uma **biblioteca de instruções, templates e prompts** que
 - Um **fluxo de 7 fases** (Context → Design → Plan → Execute → Verify → Document → Handoff) que o agente segue rigorosamente.
 - Uma camada de **Spec-Driven Development** para mudanças relevantes: `spec.md`, `plan.md`, `tasks.md`, contratos e quickstart versionados em `specs/<id>-<slug>/`.
 - **Harnesses automatizados** para validar CLI, templates, workflow e contratos antes de confiar em automação agentic.
+- **Skills agnosticas de agente**, com `atlas` como skill principal para orquestrar as demais.
 - Um **painel vivo de progresso** (`PROGRESS.md`) que atravessa sessões, evita "perda de memória" do agente e serve de onboarding em < 10 min.
 - **ADRs**, **feature docs**, **risk register**, **postmortems**, **spikes** e **decisions log** prontos.
 - Padrões de **qualidade, segurança (OWASP), testes, git e documentação** que o agente é obrigado a respeitar.
@@ -109,6 +110,13 @@ ai-dev-workflow/
 │   │   └── adopt-existing-project.prompt.md  ← adoção em projeto que já tem código
 │   └── chatmodes/
 │       └── architect.chatmode.md      ← modo "arquiteto" (read-only + ADR)
+│
+├── skills/                            ← skills agnosticas de agente
+│   ├── atlas/                         ← ★ entrada principal/orquestradora
+│   ├── workflow/
+│   ├── new-feature/
+│   ├── bug-fix/
+│   └── ...
 │
 ├── templates/                         ← copie isto para `docs/` do projeto novo
 │   ├── README.template.md
@@ -321,14 +329,28 @@ Depois peça ao agente:
 1. Abrir o projeto
 2. Pedir ao agente: "continue de onde paramos"  → ele lê PROGRESS.md
 3. Escolher uma tarefa (feature, bug, refactor, ADR…)
-4. Disparar o prompt correspondente (/new-feature, /bug-fix, etc.)
+4. Usar `atlas` como entrada principal; em agentes sem suporte a skills, disparar o prompt correspondente (/new-feature, /bug-fix, etc.)
 5. Acompanhar as 7 fases: revisar plano antes de Execute, conferir gates antes de Handoff
 6. Antes de fechar o editor: "atualize o PROGRESS.md e me dê o resumo"
 ```
 
 > **Regra de ouro**: comece toda sessão com **"leia o `PROGRESS.md` e me diga onde paramos"** e termine com **"atualize o `PROGRESS.md` antes do handoff"**. Isso sozinho elimina 80% da "perda de memória" do agente.
 
-### Slash commands disponíveis
+### Skill principal: `atlas`
+
+Comece sempre pela skill `atlas` quando seu agente suportar skills. Ela classifica o pedido e aplica as skills especializadas corretas, sem exigir que voce escolha manualmente entre feature, bug, refactor, review, docs ou stack.
+
+Exemplos:
+
+```text
+Use a skill atlas para fazer onboarding deste projeto e sugerir o proximo passo.
+Use a skill atlas para implementar a US-005 do backlog.
+Use a skill atlas para corrigir este bug: <descricao>.
+```
+
+As demais skills continuam disponiveis e sao usadas pela `atlas` como blocos especializados.
+
+### Prompts e comandos disponiveis para agentes sem skills
 
 No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pelo nome.
 
@@ -347,23 +369,23 @@ No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pe
 
 #### Começar o dia
 
-> Leia o `docs/progress/PROGRESS.md` e me diga: o que está em andamento, o que está bloqueado, e qual é o próximo passo recomendado.
+> Use a skill atlas para ler o `docs/progress/PROGRESS.md` e me dizer: o que está em andamento, o que está bloqueado, e qual é o próximo passo recomendado.
 
 #### Implementar uma story do backlog
 
-> `/new-feature` — quero implementar a **US-005: Entrar em uma partida** descrita em `docs/user-stories/backlog.md`. Siga as 7 fases. Pare antes de Execute para eu aprovar o plano.
+> Use a skill atlas para implementar a **US-005: Entrar em uma partida** descrita em `docs/user-stories/backlog.md`. Siga as 7 fases. Pare antes de Execute para eu aprovar o plano.
 
 #### Corrigir um bug
 
-> `/bug-fix` — usuários relataram que o link mágico expirado mostra erro 500 em vez de mensagem amigável. Reproduza, escreva o teste de regressão antes do fix, e atualize o `risk-register.md` se for falha sistêmica.
+> Use a skill atlas para corrigir este bug: usuários relataram que o link mágico expirado mostra erro 500 em vez de mensagem amigável. Reproduza, escreva o teste de regressão antes do fix, e atualize o `risk-register.md` se for falha sistêmica.
 
 #### Tomar uma decisão arquitetural
 
-> `/adr` — preciso decidir entre **Drizzle** e **Prisma** como ORM. Liste prós/contras considerando nosso `tech-stack.md`, recomende uma escolha e gere o ADR-000X em `docs/adr/`.
+> Use a skill atlas para decidir entre **Drizzle** e **Prisma** como ORM. Liste prós/contras considerando nosso `tech-stack.md`, recomende uma escolha e gere o ADR-000X em `docs/adr/`.
 
 #### Revisar um PR antes de aprovar
 
-> `/code-review` — analise o diff atual (`git diff main`) em modo adversarial. Foque em: segurança (OWASP), testes faltantes, validação de fronteira, doc desatualizada.
+> Use a skill atlas para analisar o diff atual (`git diff main`) em modo adversarial. Foque em: segurança (OWASP), testes faltantes, validação de fronteira, doc desatualizada.
 
 #### Trocar de tarefa no meio da sessão
 

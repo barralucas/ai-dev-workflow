@@ -22,7 +22,7 @@ Rel(repo, project, "Fornece templates")
 ## Modulos Principais
 - `.github/instructions/`: regras universais e por stack para agentes.
 - `.github/prompts/`: prompts reutilizaveis para fluxos como feature, bug, ADR e review.
-- `.opencode/skills/`: skills equivalentes para opencode.
+- `skills/`: skills agnosticas de agente, com `atlas` como orquestradora principal.
 - `templates/`: docs e arquivos base copiados para projetos consumidores.
 - `crates/aidw-core`: logica compartilhada de config, deteccao de stack, templates, progresso e workflow.
 - `crates/aidw-cli`: comandos de terminal.

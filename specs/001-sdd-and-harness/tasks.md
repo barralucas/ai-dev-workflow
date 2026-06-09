@@ -13,8 +13,8 @@
 
 ## Fase 3 - Documentacao e Skills
 - [x] T008 Atualizar `README.md` com SDD e harness.
-- [x] T009 Atualizar `.opencode/skills/new-feature/SKILL.md` para persistir specs em mudancas relevantes.
-- [x] T010 Atualizar `.opencode/skills/testing/SKILL.md` com harness engineering.
+- [x] T009 Atualizar `skills/new-feature/SKILL.md` para persistir specs em mudancas relevantes.
+- [x] T010 Atualizar `skills/testing/SKILL.md` com harness engineering.
 
 ## Fase 4 - Verificacao
 - [ ] T011 Rodar `cargo fmt --check` (bloqueado: `cargo` indisponivel no ambiente atual).

@@ -30,8 +30,8 @@ Usar Alternativa B nesta fase, documentada na ADR-0001.
 - Criar `specs/001-sdd-and-harness/{spec.md,plan.md,tasks.md,quickstart.md}`.
 - Criar `specs/001-sdd-and-harness/contracts/harness-contract.md`.
 - Atualizar `README.md`.
-- Atualizar `.opencode/skills/new-feature/SKILL.md`.
-- Atualizar `.opencode/skills/testing/SKILL.md`.
+- Atualizar `skills/new-feature/SKILL.md`.
+- Atualizar `skills/testing/SKILL.md`.
 - Atualizar crates Rust com testes/harness.
 
 ## Harness Planejado
@@ -42,7 +42,7 @@ Usar Alternativa B nesta fase, documentada na ADR-0001.
 ## Riscos
 - Testes que imprimem muito output podem ficar ruidosos: manter assertivas em filesystem/resultado.
 - `verify` usa `sh -c`; nao sera expandido nesta fase para evitar alteracao comportamental sem design dedicado.
-- `.opencode/` esta untracked no workspace; alteracoes serao incluidas porque o usuario pediu atualizar skills.
+- `skills/` esta untracked no workspace; alteracoes serao incluidas porque o usuario pediu atualizar skills.
 
 ## Verificacao
 ```bash

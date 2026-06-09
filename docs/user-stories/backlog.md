@@ -2,6 +2,16 @@
 
 ## Em Andamento
 
+### SDD-002 - Criar skill atlas e distribuir skills agnosticas de agente
+Como pessoa usando o AI Dev Workflow, quero chamar apenas a skill `atlas` para qualquer tarefa, para que o agente escolha automaticamente o fluxo correto e as skills especializadas necessarias.
+
+#### Criterios de Aceite
+- Existe `skills/atlas/SKILL.md`.
+- Scripts `bootstrap.sh` e `adopt.sh` distribuem `skills/`.
+- `aidw init` e `aidw adopt` criam `skills/atlas/SKILL.md`.
+- Harness cobre embedding e distribuicao de skills.
+- README e getting-started recomendam `atlas` como entrada principal.
+
 ### SDD-001 - Adotar SDD e harness no proprio repositorio
 Como mantenedor do AI Dev Workflow, quero que o proprio repositorio use specs versionadas e harnesses automatizados para que o toolkit seja validavel, rastreavel e confiavel para projetos consumidores.
 
