@@ -5,6 +5,9 @@
 Este repositório é uma **biblioteca de instruções, templates e prompts** que você copia (ou submodula) para qualquer novo projeto — frontend, backend, mobile, dados, infraestrutura — e ganha imediatamente:
 
 - Um **fluxo de 7 fases** (Context → Design → Plan → Execute → Verify → Document → Handoff) que o agente segue rigorosamente.
+- Uma camada de **Spec-Driven Development** para mudanças relevantes: `spec.md`, `plan.md`, `tasks.md`, contratos e quickstart versionados em `specs/<id>-<slug>/`.
+- **Harnesses automatizados** para validar CLI, templates, workflow e contratos antes de confiar em automação agentic.
+- **Skills agnosticas de agente**, com `atlas` como skill principal para orquestrar as demais.
 - Um **painel vivo de progresso** (`PROGRESS.md`) que atravessa sessões, evita "perda de memória" do agente e serve de onboarding em < 10 min.
 - **ADRs**, **feature docs**, **risk register**, **postmortems**, **spikes** e **decisions log** prontos.
 - Padrões de **qualidade, segurança (OWASP), testes, git e documentação** que o agente é obrigado a respeitar.
@@ -23,6 +26,7 @@ Este repositório é uma **biblioteca de instruções, templates e prompts** que
 - [Como usar em um projeto existente](#como-usar-em-um-projeto-existente)
 - [Como usar no dia a dia](#como-usar-no-dia-a-dia)
 - [O fluxo em 7 fases (resumo)](#o-fluxo-em-7-fases-resumo)
+- [Spec-Driven Development e harnesses](#spec-driven-development-e-harnesses)
 - [Arquivos que o agente lê automaticamente](#arquivos-que-o-agente-lê-automaticamente)
 - [Customizando por stack](#customizando-por-stack)
 - [Convenções de pastas em projetos consumidores](#convenções-de-pastas-em-projetos-consumidores)
@@ -63,7 +67,9 @@ Este workflow resolve as três:
 7. **Defesa em profundidade** — segurança não é uma camada, são várias.
 8. **YAGNI > DRY > clever code** — não construa o que não tem story; só extraia abstração após 2-3 usos reais.
 9. **Stack-agnóstico no núcleo, plugável nas pontas** — o fluxo é o mesmo; o que muda são os comandos e padrões da stack.
-10. **Idioma**: código e identificadores em **inglês**; docs e mensagens ao usuário no **idioma do projeto** (default PT-BR — ajuste no template).
+10. **Specs vivas para mudanças relevantes** — intenção, plano, tasks e contratos devem ficar versionados, não apenas no chat.
+11. **Harness antes de confiança** — automações, templates e comandos precisam de testes determinísticos antes de evals agentic.
+12. **Idioma**: código e identificadores em **inglês**; docs e mensagens ao usuário no **idioma do projeto** (default PT-BR — ajuste no template).
 
 ---
 
@@ -105,6 +111,13 @@ ai-dev-workflow/
 │   └── chatmodes/
 │       └── architect.chatmode.md      ← modo "arquiteto" (read-only + ADR)
 │
+├── skills/                            ← skills agnosticas de agente
+│   ├── atlas/                         ← ★ entrada principal/orquestradora
+│   ├── workflow/
+│   ├── new-feature/
+│   ├── bug-fix/
+│   └── ...
+│
 ├── templates/                         ← copie isto para `docs/` do projeto novo
 │   ├── README.template.md
 │   └── docs/
@@ -134,6 +147,14 @@ ai-dev-workflow/
 │   ├── customizing-for-your-stack.md
 │   ├── glossary.md
 │   └── faq.md
+│
+├── specs/                             ← specs vivas DESTE workflow
+│   └── 001-sdd-and-harness/
+│       ├── spec.md                    ← o que/por que
+│       ├── plan.md                    ← como
+│       ├── tasks.md                   ← trabalho atômico
+│       ├── contracts/                 ← contratos verificáveis
+│       └── quickstart.md              ← validação local
 │
 └── scripts/
     ├── bootstrap.sh                   ← projeto novo (zera estrutura)
@@ -308,14 +329,28 @@ Depois peça ao agente:
 1. Abrir o projeto
 2. Pedir ao agente: "continue de onde paramos"  → ele lê PROGRESS.md
 3. Escolher uma tarefa (feature, bug, refactor, ADR…)
-4. Disparar o prompt correspondente (/new-feature, /bug-fix, etc.)
+4. Usar `atlas` como entrada principal; em agentes sem suporte a skills, disparar o prompt correspondente (/new-feature, /bug-fix, etc.)
 5. Acompanhar as 7 fases: revisar plano antes de Execute, conferir gates antes de Handoff
 6. Antes de fechar o editor: "atualize o PROGRESS.md e me dê o resumo"
 ```
 
 > **Regra de ouro**: comece toda sessão com **"leia o `PROGRESS.md` e me diga onde paramos"** e termine com **"atualize o `PROGRESS.md` antes do handoff"**. Isso sozinho elimina 80% da "perda de memória" do agente.
 
-### Slash commands disponíveis
+### Skill principal: `atlas`
+
+Comece sempre pela skill `atlas` quando seu agente suportar skills. Ela classifica o pedido e aplica as skills especializadas corretas, sem exigir que voce escolha manualmente entre feature, bug, refactor, review, docs ou stack.
+
+Exemplos:
+
+```text
+Use a skill atlas para fazer onboarding deste projeto e sugerir o proximo passo.
+Use a skill atlas para implementar a US-005 do backlog.
+Use a skill atlas para corrigir este bug: <descricao>.
+```
+
+As demais skills continuam disponiveis e sao usadas pela `atlas` como blocos especializados.
+
+### Prompts e comandos disponiveis para agentes sem skills
 
 No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pelo nome.
 
@@ -334,23 +369,23 @@ No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pe
 
 #### Começar o dia
 
-> Leia o `docs/progress/PROGRESS.md` e me diga: o que está em andamento, o que está bloqueado, e qual é o próximo passo recomendado.
+> Use a skill atlas para ler o `docs/progress/PROGRESS.md` e me dizer: o que está em andamento, o que está bloqueado, e qual é o próximo passo recomendado.
 
 #### Implementar uma story do backlog
 
-> `/new-feature` — quero implementar a **US-005: Entrar em uma partida** descrita em `docs/user-stories/backlog.md`. Siga as 7 fases. Pare antes de Execute para eu aprovar o plano.
+> Use a skill atlas para implementar a **US-005: Entrar em uma partida** descrita em `docs/user-stories/backlog.md`. Siga as 7 fases. Pare antes de Execute para eu aprovar o plano.
 
 #### Corrigir um bug
 
-> `/bug-fix` — usuários relataram que o link mágico expirado mostra erro 500 em vez de mensagem amigável. Reproduza, escreva o teste de regressão antes do fix, e atualize o `risk-register.md` se for falha sistêmica.
+> Use a skill atlas para corrigir este bug: usuários relataram que o link mágico expirado mostra erro 500 em vez de mensagem amigável. Reproduza, escreva o teste de regressão antes do fix, e atualize o `risk-register.md` se for falha sistêmica.
 
 #### Tomar uma decisão arquitetural
 
-> `/adr` — preciso decidir entre **Drizzle** e **Prisma** como ORM. Liste prós/contras considerando nosso `tech-stack.md`, recomende uma escolha e gere o ADR-000X em `docs/adr/`.
+> Use a skill atlas para decidir entre **Drizzle** e **Prisma** como ORM. Liste prós/contras considerando nosso `tech-stack.md`, recomende uma escolha e gere o ADR-000X em `docs/adr/`.
 
 #### Revisar um PR antes de aprovar
 
-> `/code-review` — analise o diff atual (`git diff main`) em modo adversarial. Foque em: segurança (OWASP), testes faltantes, validação de fronteira, doc desatualizada.
+> Use a skill atlas para analisar o diff atual (`git diff main`) em modo adversarial. Foque em: segurança (OWASP), testes faltantes, validação de fronteira, doc desatualizada.
 
 #### Trocar de tarefa no meio da sessão
 
@@ -413,6 +448,46 @@ No VS Code com Copilot Chat, digite `/` e selecione. Em outros agentes, peça pe
 | **Handoff**  | Tudo verde + documentado | Resumo padrão + próximo passo | DoD 100% atendido                       |
 
 Detalhes completos em [`.github/instructions/workflow.instructions.md`](.github/instructions/workflow.instructions.md).
+
+---
+
+## Spec-Driven Development e harnesses
+
+Para mudanças relevantes neste próprio repositório e em projetos consumidores que adotarem essa prática, use `specs/<id>-<slug>/` como fonte de verdade do intento.
+
+Estrutura recomendada:
+
+```
+specs/001-minha-feature/
+├── spec.md          # o que, por que, usuários, requisitos e critérios de aceite
+├── plan.md          # arquitetura, alternativas, trade-offs e arquivos afetados
+├── tasks.md         # tarefas atômicas, ordenadas e verificáveis
+├── contracts/       # CLI/API/schema/output esperado
+└── quickstart.md    # como validar localmente
+```
+
+Use specs quando a mudança:
+
+- Afeta 2+ módulos, templates ou comandos.
+- Introduz ou altera comportamento público de CLI/API/UI.
+- Exige decisão com trade-off, contrato ou migração.
+- Precisa ser retomada por outro agente sem depender do histórico do chat.
+
+Harness engineering neste projeto significa transformar comportamento esperado em testes reprodutíveis antes de depender de revisão manual ou evals com LLM:
+
+- **CLI harness**: comandos como `init`, `adopt`, `doctor` e `verify` rodam contra diretórios temporários.
+- **Template harness**: templates obrigatórios são embutidos e geram a árvore esperada.
+- **Workflow harness**: invariantes como ordem das fases e transições são testados.
+- **Contract harness**: contratos em `specs/*/contracts/` guiam testes e outputs esperados.
+
+Pipeline local recomendado para este repositório:
+
+```bash
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo build --workspace
+```
 
 ---
 

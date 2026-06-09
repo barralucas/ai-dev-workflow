@@ -63,6 +63,16 @@ pub fn run(
         println!("  (docs/ already exists — skipped)");
     }
 
+    // Write agent-agnostic skills
+    let written_skills = Templates::write_skills(&project_dir, false)?;
+    for file in &written_skills {
+        println!("  ✓ Created {}", file);
+    }
+
+    if written_skills.is_empty() {
+        println!("  (skills/ already exists — skipped)");
+    }
+
     // Write AGENTS.md if not exists
     let agents_path = project_dir.join("AGENTS.md");
     if !agents_path.exists() {
@@ -79,9 +89,40 @@ pub fn run(
     println!("Next steps:");
     println!("  1. Edit docs/progress/PROGRESS.md (set current sprint)");
     println!("  2. Edit docs/architecture/tech-stack.md (set versions)");
-    println!("  3. Run `aidw` to open the dashboard");
-    println!("  4. git add -A && git commit -m \"chore: bootstrap ai-dev-workflow\"");
+    println!("  3. Start with the `atlas` skill in your agent");
+    println!("  4. Run `aidw` to open the dashboard");
+    println!("  5. git add -A && git commit -m \"chore: bootstrap ai-dev-workflow\"");
     println!();
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aidw_core::Config;
+
+    #[test]
+    fn test_init_creates_config_and_required_docs() {
+        let dir = tempfile::tempdir().unwrap();
+
+        run(
+            dir.path().to_path_buf(),
+            Some("Harness Project".to_string()),
+            Some("rust".to_string()),
+            true,
+        )
+        .unwrap();
+
+        let config = Config::load(dir.path()).unwrap();
+        assert_eq!(config.project.name, "Harness Project");
+        assert_eq!(config.project.stack, "rust");
+        assert_eq!(config.commands.test.as_deref(), Some("cargo test"));
+
+        assert!(dir.path().join("docs/progress/PROGRESS.md").exists());
+        assert!(dir.path().join("docs/architecture/tech-stack.md").exists());
+        assert!(dir.path().join("docs/adr/0001-stack-inicial.md").exists());
+        assert!(dir.path().join("skills/atlas/SKILL.md").exists());
+        assert!(dir.path().join("skills/workflow/SKILL.md").exists());
+    }
 }

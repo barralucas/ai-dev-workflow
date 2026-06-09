@@ -60,6 +60,7 @@ pub fn run(
         println!("    - docs/progress/PROGRESS.md (if not exists)");
         println!("    - docs/progress/decisions-log.md (if not exists)");
         println!("    - docs/adr/0000-template.md (if not exists)");
+        println!("    - skills/ (if not exists)");
         if !minimal {
             println!("    - docs/architecture/ (if not exists)");
             println!("    - docs/features/ (if not exists)");
@@ -148,15 +149,82 @@ pub fn run(
         }
     }
 
+    // Write agent-agnostic skills (non-destructive)
+    let written_skills = Templates::write_skills(&project_dir, false)?;
+    for file in &written_skills {
+        println!("  ✓ Created {}", file);
+    }
+
     println!();
     println!("✅ Adoption complete!");
     println!();
     println!("Next steps:");
     println!("  1. Open the project with your AI agent (Copilot, Claude, Codex)");
-    println!("  2. Ask it to populate PROGRESS.md from the existing code");
+    println!("  2. Start with the `atlas` skill and ask it to adopt the existing project");
     println!("  3. Run `aidw` to see the dashboard");
     println!("  4. git add -A && git commit -m \"chore: adopt ai-dev-workflow\"");
     println!();
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aidw_core::Config;
+
+    #[test]
+    fn test_adopt_dry_run_does_not_write_files() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("Cargo.toml"), "[package]\nname = \"fixture\"")
+            .unwrap();
+
+        run(dir.path().to_path_buf(), None, false, true, true).unwrap();
+
+        assert!(!dir.path().join(Config::FILE_NAME).exists());
+        assert!(!dir.path().join("docs/progress/PROGRESS.md").exists());
+    }
+
+    #[test]
+    fn test_adopt_creates_minimal_context_for_existing_project() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("Cargo.toml"), "[package]\nname = \"fixture\"")
+            .unwrap();
+
+        run(dir.path().to_path_buf(), None, true, false, true).unwrap();
+
+        let config = Config::load(dir.path()).unwrap();
+        assert_eq!(config.project.stack, "rust");
+        assert!(dir.path().join("docs/progress/PROGRESS.md").exists());
+        assert!(dir.path().join("docs/progress/decisions-log.md").exists());
+        assert!(dir.path().join("docs/adr/0000-template.md").exists());
+        assert!(dir.path().join("skills/atlas/SKILL.md").exists());
+    }
+
+    #[test]
+    fn test_adopt_preserves_existing_progress_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let progress_dir = dir.path().join("docs/progress");
+        std::fs::create_dir_all(&progress_dir).unwrap();
+        std::fs::write(progress_dir.join("PROGRESS.md"), "# Existing Progress\n").unwrap();
+
+        run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
+
+        let progress = std::fs::read_to_string(progress_dir.join("PROGRESS.md")).unwrap();
+        assert_eq!(progress, "# Existing Progress\n");
+    }
+
+    #[test]
+    fn test_adopt_preserves_existing_skill() {
+        let dir = tempfile::tempdir().unwrap();
+        let atlas_path = dir.path().join("skills/atlas/SKILL.md");
+        std::fs::create_dir_all(atlas_path.parent().unwrap()).unwrap();
+        std::fs::write(&atlas_path, "custom atlas").unwrap();
+
+        run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
+
+        let atlas = std::fs::read_to_string(atlas_path).unwrap();
+        assert_eq!(atlas, "custom atlas");
+        assert!(dir.path().join("skills/workflow/SKILL.md").exists());
+    }
 }

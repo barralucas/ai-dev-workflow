@@ -96,6 +96,13 @@ echo "→ Copiando AGENTS.md e CLAUDE.md..."
 cp "$WORKFLOW_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
 cp "$WORKFLOW_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
 
+# --- Agent skills ---
+if [[ -d "$WORKFLOW_DIR/skills" ]]; then
+  echo "→ Copiando skills agnósticas de agente..."
+  mkdir -p "$TARGET_DIR/skills"
+  cp -R "$WORKFLOW_DIR/skills/." "$TARGET_DIR/skills/"
+fi
+
 # --- Templates de docs ---
 if [[ "$UPDATE_MODE" == false ]]; then
   if [[ -d "$TARGET_DIR/docs" ]]; then
@@ -170,5 +177,6 @@ echo "  1. Edite docs/progress/PROGRESS.md (defina sprint atual)."
 echo "  2. Edite docs/architecture/tech-stack.md (versões reais)."
 echo "  3. Finalize docs/adr/0001-stack-inicial.md."
 echo "  4. Adicione primeiras stories em docs/user-stories/backlog.md."
-echo "  5. git add -A && git commit -m \"chore: bootstrap ai-dev-workflow\""
+echo "  5. Comece pela skill 'atlas' no seu agente."
+echo "  6. git add -A && git commit -m \"chore: bootstrap ai-dev-workflow\""
 echo

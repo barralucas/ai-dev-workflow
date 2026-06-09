@@ -188,6 +188,15 @@ for f in AGENTS.md CLAUDE.md; do
   fi
 done
 
+# --- 2.1. Agent skills (nao sobrescreve skills existentes) ---
+if [[ -d "$WORKFLOW_DIR/skills" ]]; then
+  say "Copiando skills agnosticas de agente (preservando existentes)..."
+  if [[ "$DRY_RUN" == false ]]; then
+    mkdir -p "$TARGET_DIR/skills"
+    cp -Rn "$WORKFLOW_DIR/skills/." "$TARGET_DIR/skills/" 2>/dev/null || true
+  fi
+fi
+
 # --- 3. docs/ — só o mínimo, preservando o que existe ---
 say "Criando esqueleto mínimo de docs/ (sem tocar arquivos existentes)..."
 do_run "mkdir -p \"$TARGET_DIR/docs/progress\" \"$TARGET_DIR/docs/adr\""
@@ -257,8 +266,8 @@ echo "✅ Adoção concluída$( [[ "$DRY_RUN" == true ]] && echo " (dry-run — 
 echo
 echo "Próximos passos (faça com o agente):"
 echo "  1. Abra o projeto no seu editor com Copilot/Claude/Codex."
-echo "  2. Rode o prompt: '/adopt-existing-project' (ou peça ao agente para segui-lo)."
-echo "     - Ele vai inventariar o código, popular PROGRESS.md, e propor ADRs retroativas."
+echo "  2. Comece pela skill 'atlas' no seu agente e peça para adotar o projeto existente."
+echo "     - Ela vai rotear para adopt-existing-project, inventariar o código, popular PROGRESS.md, e propor ADRs retroativas."
 echo "  3. Revise o que o agente gerou em:"
 echo "       - docs/progress/PROGRESS.md"
 echo "       - docs/adr/0001-stack-inicial.md (se gerada)"
