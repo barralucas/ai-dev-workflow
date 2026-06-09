@@ -16,6 +16,10 @@ O projeto passou a dogfoodear Spec-Driven Development, possui harness inicial pa
   - Scripts `bootstrap.sh`/`adopt.sh` passam a copiar `skills/`.
   - CLI passa a embutir `skills/` e distribuir skills em `init`/`adopt`.
   - README/getting-started e feature doc atualizados para orientar uso da `atlas`.
+- SDD-003: Simplificar update do workflow em projetos consumidores.
+  - Criado `VERSION` e marcador instalado `.aidw-version`.
+  - Scripts e CLI passam a exibir versao e atualizar `skills/` ao rerodar instalacao/adocao.
+  - Updates significativos (major/minor) geram aviso no terminal.
 
 ## Em Andamento
 - Verificacao local dos gates Rust.
@@ -27,8 +31,10 @@ O projeto passou a dogfoodear Spec-Driven Development, possui harness inicial pa
 
 ## Bloqueios
 - `cargo` indisponivel no ambiente atual; gates precisam ser rodados em maquina com Rust toolchain.
+- Validacao `bash -n` dos scripts indisponivel neste ambiente porque WSL nao tem distribuicao instalada.
 
 ## Decisoes Recentes
 - 2026-05-29: O proprio repositorio passa a usar `docs/` e `specs/` como fontes versionadas de contexto e intencao.
 - 2026-05-29: Harness inicial foca em testes Rust deterministas antes de evals com LLM real.
 - 2026-06-08: `atlas` passa a ser a skill principal recomendada; as demais skills continuam como blocos especializados agnosticos de agente distribuidos junto do toolkit.
+- 2026-06-08: Projetos consumidores registram `.aidw-version`; rerodar instalacao/adocao atualiza `skills/` e preserva docs vivos.

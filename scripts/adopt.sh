@@ -30,6 +30,17 @@ PROJECT_NAME=""
 DRY_RUN=false
 MINIMAL=false
 ASSUME_YES=false
+WORKFLOW_VERSION="$(tr -d '[:space:]' < "$WORKFLOW_DIR/VERSION" 2>/dev/null || echo "0.0.0")"
+INSTALLED_VERSION=""
+[[ -f "$TARGET_DIR/.aidw-version" ]] && INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/.aidw-version")"
+
+major_minor() {
+  printf '%s' "$1" | awk -F. '{ print $1 "." $2 }'
+}
+
+is_significant_update() {
+  [[ -n "$1" && "$(major_minor "$1")" != "$(major_minor "$2")" ]]
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -103,6 +114,14 @@ inventory() {
 }
 
 inventory
+
+say "AI Dev Workflow version: $WORKFLOW_VERSION"
+if [[ -n "$INSTALLED_VERSION" ]]; then
+  say "Installed version: $INSTALLED_VERSION"
+  if is_significant_update "$INSTALLED_VERSION" "$WORKFLOW_VERSION"; then
+    warn "Update significativo detectado: $INSTALLED_VERSION → $WORKFLOW_VERSION"
+  fi
+fi
 
 # --- Stack ---
 if [[ -z "$STACK" ]]; then
@@ -188,13 +207,19 @@ for f in AGENTS.md CLAUDE.md; do
   fi
 done
 
-# --- 2.1. Agent skills (nao sobrescreve skills existentes) ---
+# --- 2.1. Agent skills (atualiza skills do workflow) ---
 if [[ -d "$WORKFLOW_DIR/skills" ]]; then
-  say "Copiando skills agnosticas de agente (preservando existentes)..."
+  say "Atualizando skills agnosticas de agente..."
   if [[ "$DRY_RUN" == false ]]; then
     mkdir -p "$TARGET_DIR/skills"
-    cp -Rn "$WORKFLOW_DIR/skills/." "$TARGET_DIR/skills/" 2>/dev/null || true
+    cp -R "$WORKFLOW_DIR/skills/." "$TARGET_DIR/skills/" 2>/dev/null || true
   fi
+fi
+
+# --- 2.2. Version marker ---
+if [[ "$DRY_RUN" == false ]]; then
+  echo "$WORKFLOW_VERSION" > "$TARGET_DIR/.aidw-version"
+  say "Gravada versão instalada em .aidw-version"
 fi
 
 # --- 3. docs/ — só o mínimo, preservando o que existe ---
@@ -263,6 +288,7 @@ fi
 # --- Resumo final ---
 echo
 echo "✅ Adoção concluída$( [[ "$DRY_RUN" == true ]] && echo " (dry-run — nada foi escrito)")."
+echo "Versão instalada: $WORKFLOW_VERSION"
 echo
 echo "Próximos passos (faça com o agente):"
 echo "  1. Abra o projeto no seu editor com Copilot/Claude/Codex."

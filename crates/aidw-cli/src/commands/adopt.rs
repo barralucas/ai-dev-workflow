@@ -13,6 +13,15 @@ pub fn run(
     _yes: bool,
 ) -> Result<()> {
     println!("→ Adopting ai-dev-workflow in: {}", project_dir.display());
+    let workflow_version = Templates::workflow_version();
+    let previous_version = Templates::installed_version(&project_dir);
+    println!("  AI Dev Workflow version: {}", workflow_version);
+    if let Some(previous) = &previous_version {
+        println!("  Installed version: {}", previous);
+        if Templates::is_significant_update(previous, &workflow_version) {
+            println!("  ⚠ Significant workflow update detected: {} → {}", previous, workflow_version);
+        }
+    }
     println!();
 
     // Inventory
@@ -57,6 +66,7 @@ pub fn run(
         println!();
         println!("  [dry-run] Would create:");
         println!("    - .aidw.toml");
+        println!("    - .aidw-version");
         println!("    - docs/progress/PROGRESS.md (if not exists)");
         println!("    - docs/progress/decisions-log.md (if not exists)");
         println!("    - docs/adr/0000-template.md (if not exists)");
@@ -149,11 +159,22 @@ pub fn run(
         }
     }
 
-    // Write agent-agnostic skills (non-destructive)
-    let written_skills = Templates::write_skills(&project_dir, false)?;
+    // Write or update agent-agnostic skills when installing a new workflow version.
+    let update_workflow_assets = previous_version.as_deref() != Some(workflow_version.as_str());
+    let written_skills = Templates::write_skills(&project_dir, update_workflow_assets)?;
     for file in &written_skills {
-        println!("  ✓ Created {}", file);
+        if update_workflow_assets && previous_version.is_some() {
+            println!("  ✓ Updated {}", file);
+        } else {
+            println!("  ✓ Created {}", file);
+        }
     }
+    if update_workflow_assets && previous_version.is_some() && !written_skills.is_empty() {
+        println!("  ✓ Updated skills/ for AI Dev Workflow {}", workflow_version);
+    }
+
+    Templates::write_version_marker(&project_dir)?;
+    println!("  ✓ Wrote .aidw-version ({})", workflow_version);
 
     println!();
     println!("✅ Adoption complete!");
@@ -199,6 +220,10 @@ mod tests {
         assert!(dir.path().join("docs/progress/decisions-log.md").exists());
         assert!(dir.path().join("docs/adr/0000-template.md").exists());
         assert!(dir.path().join("skills/atlas/SKILL.md").exists());
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".aidw-version")).unwrap().trim(),
+            Templates::workflow_version()
+        );
     }
 
     #[test]
@@ -220,11 +245,39 @@ mod tests {
         let atlas_path = dir.path().join("skills/atlas/SKILL.md");
         std::fs::create_dir_all(atlas_path.parent().unwrap()).unwrap();
         std::fs::write(&atlas_path, "custom atlas").unwrap();
+        std::fs::write(dir.path().join(".aidw-version"), format!("{}\n", Templates::workflow_version())).unwrap();
 
         run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
 
         let atlas = std::fs::read_to_string(atlas_path).unwrap();
         assert_eq!(atlas, "custom atlas");
         assert!(dir.path().join("skills/workflow/SKILL.md").exists());
+    }
+
+    #[test]
+    fn test_adopt_updates_skills_when_version_changes() {
+        let dir = tempfile::tempdir().unwrap();
+        let atlas_path = dir.path().join("skills/atlas/SKILL.md");
+        std::fs::create_dir_all(atlas_path.parent().unwrap()).unwrap();
+        std::fs::write(&atlas_path, "old atlas").unwrap();
+        std::fs::write(dir.path().join(".aidw-version"), "0.0.0\n").unwrap();
+
+        run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
+
+        let atlas = std::fs::read_to_string(atlas_path).unwrap();
+        assert!(atlas.contains("name: atlas"));
+    }
+
+    #[test]
+    fn test_adopt_preserves_skills_when_version_matches() {
+        let dir = tempfile::tempdir().unwrap();
+        let atlas_path = dir.path().join("skills/atlas/SKILL.md");
+        std::fs::create_dir_all(atlas_path.parent().unwrap()).unwrap();
+        std::fs::write(&atlas_path, "custom atlas").unwrap();
+        std::fs::write(dir.path().join(".aidw-version"), format!("{}\n", Templates::workflow_version())).unwrap();
+
+        run(dir.path().to_path_buf(), Some("rust".to_string()), true, false, true).unwrap();
+
+        assert_eq!(std::fs::read_to_string(atlas_path).unwrap(), "custom atlas");
     }
 }

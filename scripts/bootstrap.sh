@@ -19,6 +19,17 @@ TARGET_DIR="$(pwd)"
 UPDATE_MODE=false
 STACK=""
 PROJECT_NAME=""
+WORKFLOW_VERSION="$(tr -d '[:space:]' < "$WORKFLOW_DIR/VERSION" 2>/dev/null || echo "0.0.0")"
+INSTALLED_VERSION=""
+[[ -f "$TARGET_DIR/.aidw-version" ]] && INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/.aidw-version")"
+
+major_minor() {
+  printf '%s' "$1" | awk -F. '{ print $1 "." $2 }'
+}
+
+is_significant_update() {
+  [[ -n "$1" && "$(major_minor "$1")" != "$(major_minor "$2")" ]]
+}
 
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
@@ -32,6 +43,13 @@ done
 
 echo "→ Workflow source: $WORKFLOW_DIR"
 echo "→ Target project:  $TARGET_DIR"
+echo "→ AI Dev Workflow version: $WORKFLOW_VERSION"
+if [[ -n "$INSTALLED_VERSION" ]]; then
+  echo "→ Installed version: $INSTALLED_VERSION"
+  if is_significant_update "$INSTALLED_VERSION" "$WORKFLOW_VERSION"; then
+    echo "⚠️  Update significativo detectado: $INSTALLED_VERSION → $WORKFLOW_VERSION"
+  fi
+fi
 echo
 
 # --- Confirmação ---
@@ -98,10 +116,14 @@ cp "$WORKFLOW_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
 
 # --- Agent skills ---
 if [[ -d "$WORKFLOW_DIR/skills" ]]; then
-  echo "→ Copiando skills agnósticas de agente..."
+  echo "→ Atualizando skills agnósticas de agente..."
   mkdir -p "$TARGET_DIR/skills"
   cp -R "$WORKFLOW_DIR/skills/." "$TARGET_DIR/skills/"
 fi
+
+# --- Version marker ---
+echo "$WORKFLOW_VERSION" > "$TARGET_DIR/.aidw-version"
+echo "→ Gravada versão instalada em .aidw-version"
 
 # --- Templates de docs ---
 if [[ "$UPDATE_MODE" == false ]]; then
@@ -171,6 +193,7 @@ fi
 
 echo
 echo "✅ Bootstrap concluído."
+echo "Versão instalada: $WORKFLOW_VERSION"
 echo
 echo "Próximos passos:"
 echo "  1. Edite docs/progress/PROGRESS.md (defina sprint atual)."
