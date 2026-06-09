@@ -27,7 +27,47 @@ pub struct Templates;
 #[folder = "../../skills/"]
 pub struct Skills;
 
+/// Embedded workflow metadata assets.
+#[derive(Embed)]
+#[folder = "../../"]
+#[include = "VERSION"]
+pub struct WorkflowMetadata;
+
 impl Templates {
+    pub const VERSION_FILE: &'static str = ".aidw-version";
+
+    /// Current AI Dev Workflow version embedded in the binary.
+    pub fn workflow_version() -> String {
+        WorkflowMetadata::get("VERSION")
+            .map(|f| String::from_utf8_lossy(&f.data).trim().to_string())
+            .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string())
+    }
+
+    /// Read the workflow version previously installed in a project.
+    pub fn installed_version(target_dir: &Path) -> Option<String> {
+        let path = target_dir.join(Self::VERSION_FILE);
+        std::fs::read_to_string(path).ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+    }
+
+    /// Write the workflow version marker to a project.
+    pub fn write_version_marker(target_dir: &Path) -> Result<(), TemplateError> {
+        std::fs::write(target_dir.join(Self::VERSION_FILE), format!("{}\n", Self::workflow_version()))?;
+        Ok(())
+    }
+
+    /// Significant updates are major/minor changes. Patch updates stay quiet.
+    pub fn is_significant_update(previous: &str, current: &str) -> bool {
+        fn major_minor(version: &str) -> Option<(&str, &str)> {
+            let mut parts = version.split('.');
+            Some((parts.next()?, parts.next()?))
+        }
+
+        match (major_minor(previous), major_minor(current)) {
+            (Some(prev), Some(curr)) => prev != curr,
+            _ => previous != current,
+        }
+    }
+
     /// List all available template files
     pub fn list() -> Vec<String> {
         Self::iter().map(|f| f.to_string()).collect()
@@ -180,6 +220,13 @@ mod tests {
                 "Required skill should be embedded: {skill}"
             );
         }
+    }
+
+    #[test]
+    fn test_significant_update_detection() {
+        assert!(!Templates::is_significant_update("0.1.0", "0.1.1"));
+        assert!(Templates::is_significant_update("0.1.0", "0.2.0"));
+        assert!(Templates::is_significant_update("0.1.0", "1.0.0"));
     }
 
     #[test]

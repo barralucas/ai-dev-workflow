@@ -38,6 +38,7 @@ O script vai:
 - Copiar `.github/`, `AGENTS.md`, `CLAUDE.md`.
 - Copiar `skills/`, incluindo a skill principal `atlas`.
 - Copiar `templates/docs/` para `docs/`.
+- Mostrar a versao instalada e gravar `.aidw-version`.
 - Perguntar a stack (Next.js, Node backend, Python, mobile, custom).
 - Substituir `{{PROJECT_NAME}}` nos templates.
 - Sugerir o primeiro commit.
@@ -103,7 +104,8 @@ O script:
 
 - Detecta a stack (Next.js, Node backend, Python, mobile) a partir dos manifests.
 - Copia `.github/` sem sobrescrever nada (`cp -n`).
-- Copia `skills/` sem sobrescrever skills existentes, incluindo `atlas`.
+- Atualiza `skills/`, incluindo a skill principal `atlas`.
+- Mostra a versao instalada, compara com `.aidw-version` quando existir e avisa update significativo.
 - Cria só o esqueleto mínimo de `docs/` — preserva qualquer doc já existente.
 - Não toca `README.md`, `.gitignore`, `.env.example` existentes.
 
@@ -133,6 +135,10 @@ git commit -m "chore: adopt ai-dev-workflow"
 ### 4. A partir daqui
 
 Use o fluxo completo nas **próximas features**. Não tente retrofittar tudo de uma vez.
+
+### 5. Atualizar depois
+
+Quando o repositório do AI Dev Workflow receber novas skills ou ajustes relevantes, puxe a versão nova e rerode o mesmo comando de instalação/adocao. O instalador atualiza `skills/`, mostra a versão aplicada e preserva docs vivos como `PROGRESS.md`.
 
 ---
 

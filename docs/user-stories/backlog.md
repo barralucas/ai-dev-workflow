@@ -2,6 +2,16 @@
 
 ## Em Andamento
 
+### SDD-003 - Simplificar update do workflow instalado
+Como pessoa que ja usa o AI Dev Workflow, quero rerodar o comando de instalacao para atualizar skills e saber qual versao foi aplicada, para manter o projeto atualizado sem passos manuais complexos.
+
+#### Criterios de Aceite
+- Existe `VERSION`.
+- Scripts e CLI exibem a versao atual.
+- Projetos consumidores recebem `.aidw-version`.
+- Rerodar instalacao/adocao atualiza `skills/`.
+- Update significativo mostra aviso no terminal.
+
 ### SDD-002 - Criar skill atlas e distribuir skills agnosticas de agente
 Como pessoa usando o AI Dev Workflow, quero chamar apenas a skill `atlas` para qualquer tarefa, para que o agente escolha automaticamente o fluxo correto e as skills especializadas necessarias.
 

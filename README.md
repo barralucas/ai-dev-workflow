@@ -269,8 +269,10 @@ O script:
 1. Faz **inventário** do projeto (manifests, git, docs existentes).
 2. **Detecta a stack automaticamente** (Next.js, Node backend, Python, mobile) a partir de `package.json`/`pyproject.toml`/`app.json`.
 3. Copia `.github/` **sem sobrescrever** nada existente (`cp -n`).
-4. Cria apenas o **esqueleto mínimo** de `docs/` (PROGRESS.md, decisions-log.md, adr/template). Preserva tudo que já existe.
-5. **Não toca** em `README.md`, `.gitignore`, `.env.example` se já existirem.
+4. Atualiza `skills/`, incluindo `atlas`, para permitir update simples rerodando o instalador.
+5. Mostra a versão instalada, grava `.aidw-version` e avisa quando houver update significativo.
+6. Cria apenas o **esqueleto mínimo** de `docs/` (PROGRESS.md, decisions-log.md, adr/template). Preserva tudo que já existe.
+7. **Não toca** em `README.md`, `.gitignore`, `.env.example` se já existirem.
 
 Flags úteis:
 
@@ -576,7 +578,10 @@ Princípio: **um único `AGENTS.md` curto que aponta para o resto** evita duplic
   - `MINOR` quando uma nova instrução/template/prompt é adicionado.
   - `PATCH` quando há correção/clareza.
 - Projetos que usam **submódulo** dão `git submodule update --remote` para puxar.
-- Projetos que **copiaram** podem rodar `scripts/bootstrap.sh --update` (apenas arquivos não modificados).
+- Projetos que **copiaram** podem rerodar `scripts/bootstrap.sh --update` ou `scripts/adopt.sh --yes` para atualizar os artefatos do workflow.
+- A instalacao mostra a versao no terminal e grava `.aidw-version` no projeto consumidor.
+- Se `.aidw-version` ja existir, o instalador mostra a versao anterior e avisa quando houver update significativo (mudanca de major/minor).
+- `skills/` e atualizado ao rerodar instalacao/adocao; docs vivos como `PROGRESS.md` e ADRs existentes continuam preservados.
 
 ---
 

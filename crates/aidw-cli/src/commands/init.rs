@@ -12,6 +12,15 @@ pub fn run(
     _yes: bool,
 ) -> Result<()> {
     println!("→ Initializing ai-dev-workflow in: {}", project_dir.display());
+    let workflow_version = Templates::workflow_version();
+    let previous_version = Templates::installed_version(&project_dir);
+    println!("  AI Dev Workflow version: {}", workflow_version);
+    if let Some(previous) = &previous_version {
+        println!("  Installed version: {}", previous);
+        if Templates::is_significant_update(previous, &workflow_version) {
+            println!("  ⚠ Significant workflow update detected: {} → {}", previous, workflow_version);
+        }
+    }
     println!();
 
     // Determine project name
@@ -49,9 +58,14 @@ pub fn run(
     config.commands.test = cmds.test;
     config.commands.build = cmds.build;
 
-    // Write .aidw.toml
-    config.save(&project_dir)?;
-    println!("  ✓ Created .aidw.toml");
+    // Write .aidw.toml only on first install; updates must preserve project config.
+    let config_path = project_dir.join(Config::FILE_NAME);
+    if !config_path.exists() {
+        config.save(&project_dir)?;
+        println!("  ✓ Created .aidw.toml");
+    } else {
+        println!("  • .aidw.toml already exists — preserved");
+    }
 
     // Write docs templates
     let written = Templates::write_docs(&project_dir, &project_name, false)?;
@@ -63,15 +77,25 @@ pub fn run(
         println!("  (docs/ already exists — skipped)");
     }
 
-    // Write agent-agnostic skills
-    let written_skills = Templates::write_skills(&project_dir, false)?;
+    // Write or update agent-agnostic skills when installing a new workflow version.
+    let update_workflow_assets = previous_version.as_deref() != Some(workflow_version.as_str());
+    let written_skills = Templates::write_skills(&project_dir, update_workflow_assets)?;
     for file in &written_skills {
-        println!("  ✓ Created {}", file);
+        if update_workflow_assets && previous_version.is_some() {
+            println!("  ✓ Updated {}", file);
+        } else {
+            println!("  ✓ Created {}", file);
+        }
     }
 
     if written_skills.is_empty() {
         println!("  (skills/ already exists — skipped)");
+    } else if update_workflow_assets && previous_version.is_some() {
+        println!("  ✓ Updated skills/ for AI Dev Workflow {}", workflow_version);
     }
+
+    Templates::write_version_marker(&project_dir)?;
+    println!("  ✓ Wrote .aidw-version ({})", workflow_version);
 
     // Write AGENTS.md if not exists
     let agents_path = project_dir.join("AGENTS.md");
@@ -124,5 +148,50 @@ mod tests {
         assert!(dir.path().join("docs/adr/0001-stack-inicial.md").exists());
         assert!(dir.path().join("skills/atlas/SKILL.md").exists());
         assert!(dir.path().join("skills/workflow/SKILL.md").exists());
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".aidw-version")).unwrap().trim(),
+            Templates::workflow_version()
+        );
+    }
+
+    #[test]
+    fn test_init_updates_skills_when_version_changes() {
+        let dir = tempfile::tempdir().unwrap();
+        let skill_path = dir.path().join("skills/atlas/SKILL.md");
+        std::fs::create_dir_all(skill_path.parent().unwrap()).unwrap();
+        std::fs::write(&skill_path, "old atlas").unwrap();
+        std::fs::write(dir.path().join(".aidw-version"), "0.0.0\n").unwrap();
+        std::fs::write(dir.path().join(Config::FILE_NAME), "custom config").unwrap();
+
+        run(
+            dir.path().to_path_buf(),
+            Some("Harness Project".to_string()),
+            Some("rust".to_string()),
+            true,
+        )
+        .unwrap();
+
+        let atlas = std::fs::read_to_string(skill_path).unwrap();
+        assert!(atlas.contains("name: atlas"));
+        assert_eq!(std::fs::read_to_string(dir.path().join(Config::FILE_NAME)).unwrap(), "custom config");
+    }
+
+    #[test]
+    fn test_init_preserves_skills_when_version_matches() {
+        let dir = tempfile::tempdir().unwrap();
+        let skill_path = dir.path().join("skills/atlas/SKILL.md");
+        std::fs::create_dir_all(skill_path.parent().unwrap()).unwrap();
+        std::fs::write(&skill_path, "custom atlas").unwrap();
+        std::fs::write(dir.path().join(".aidw-version"), format!("{}\n", Templates::workflow_version())).unwrap();
+
+        run(
+            dir.path().to_path_buf(),
+            Some("Harness Project".to_string()),
+            Some("rust".to_string()),
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(std::fs::read_to_string(skill_path).unwrap(), "custom atlas");
     }
 }
